@@ -108,13 +108,26 @@ public class RobotContainer {
     //   m_shooterSubsystem)
     // );
   }
+
+  /**
+   * Return a reference to the drive subsystem so it can be accessed from the Robot class (for simulation)
+   * @return the drive subsystem for our robot
+   */
+  public DriveSubsystem getDriveSubsystem() {
+    return m_driveSubsystem;
+  }
+
+  /** Zeros the outputs of all subsystems. */
+  public void zeroAllOutputs() {
+    m_driveSubsystem.stop();
+  }
   
   /**
    * Set up the Chooser on the SmartDashboard for selecting the autonomous routine
    */
   private void setUpAutonomousChooser() {
-    m_autonomousChooser.setDefaultOption("Do Nothing", null);
-    //m_autonomousChooser.addOption("Another option", someAutonomousCommand);
+    m_autonomousChooser.setDefaultOption("Barrel Race", AutonomousBuilder.getBarrelRaceCommand(m_driveSubsystem));
+    m_autonomousChooser.addOption("Do Nothing", null);
     SmartDashboard.putData("Autonomous", m_autonomousChooser);
   }
 

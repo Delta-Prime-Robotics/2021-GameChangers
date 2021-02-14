@@ -4,6 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.wpilibj.system.LinearSystem;
+import edu.wpi.first.wpilibj.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
+import edu.wpi.first.wpiutil.math.numbers.N2;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -57,25 +63,24 @@ public final class Constants {
             public static final int UpDown = 1;
         }
         public final class RightStick {
-            public static final int LeftRight = 2;
-            public static final int UpDown = 3;
+            public static final int LeftRight = 4;
+            public static final int UpDown = 5;
         }
+        public final static int LeftToggle = 2;
+        public final static int RightToggle = 3;
     
         public final class Button {
-            public static final int X = 1;
-            public static final int A = 2;
-            public static final int B = 3;
+            public static final int A = 1;
+            public static final int B = 2;
+            public static final int X = 3;
             public static final int Y = 4;
             public static final int LB = 5;
             public static final int RB = 6;
-            public static final int LT = 7;
-            public static final int RT = 8;
-            // public static final int Back = 9;
-            public static final int Start = 10;
-            // public static final int LeftJoyStickClick = 11;
-            // public static final int RightJoyStickClick = 12;
-        }
-    
+            public static final int Back = 7;
+            public static final int Start = 8;
+            // public static final int LeftJoyStickClick = 9;
+            // public static final int RightJoyStickClick = 10;
+        }    
     }
     
     // 3D Joystick (rotating stick)
@@ -95,13 +100,50 @@ public final class Constants {
 
         public static final boolean kLeftEncoderReversed = false;
         public static final boolean kRightEncoderReversed = true;
+        
+        public static final double kTrackwidthMeters = 0.69;
+        public static final DifferentialDriveKinematics kDriveKinematics =
+        new DifferentialDriveKinematics(kTrackwidthMeters);
 		
         public static final int kEncoderCPR = 360;
         public static final double kWheelDiameterInches = 6;
+        public static final double kWheelDiameterMeters = kWheelDiameterInches * 0.0254;
         public static final double kEncoderDistancePerPulse = 
-            (kWheelDiameterInches * Math.PI) / (double) kEncoderCPR;
+            (kWheelDiameterMeters * Math.PI) / (double) kEncoderCPR;
 
-        public static final boolean kGyroReversed = false;
+        public static final boolean kGyroReversed = true; //false;
+
+        
+
+
+        
+        
+        // These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
+        // These characterization values MUST be determined either experimentally or theoretically
+        // for *your* robot's drive.
+        // The Robot Characterization Toolsuite provides a convenient tool for obtaining these
+        // values for your robot.
+        public static final double ksVolts = 0.22;
+        public static final double kvVoltSecondsPerMeter = 1.98;
+        public static final double kaVoltSecondsSquaredPerMeter = 0.2;
+        // These two values are "angular" kV and kA
+        public static final double kvVoltSecondsPerRadian = 1.5;
+        public static final double kaVoltSecondsSquaredPerRadian = 0.3;
+        
+
+        public static final LinearSystem<N2, N2, N2> kDrivetrainPlant =
+        LinearSystemId.identifyDrivetrainSystem(
+            kvVoltSecondsPerMeter,
+            kaVoltSecondsSquaredPerMeter,
+            kvVoltSecondsPerRadian,
+            kaVoltSecondsSquaredPerRadian);
+        
+        // Example values only -- use what's on your physical robot!
+        public static final DCMotor kDriveGearbox = DCMotor.getCIM(2);
+        public static final double kDriveGearing = 8;
+
+        // Example value only - as above, this must be tuned for your drive!
+        public static final double kPDriveVel = 8.5;
     }
 
     // Shooter Subsystem Constants
@@ -117,5 +159,16 @@ public final class Constants {
         public static final double kMaxRPM = 5700;
 
         public static final double kDeadzone = 0.1;
+    }
+    
+    public static final double kFeet2Meters = 0.3048;
+    
+    public static final class AutoConstants {
+        public static final double kMaxSpeedMetersPerSecond = 3;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 3;
+
+        // Reasonable baseline values for a RAMSETE follower in units of meters and seconds
+        public static final double kRamseteB = 2;
+        public static final double kRamseteZeta = 0.7;
     }
 }

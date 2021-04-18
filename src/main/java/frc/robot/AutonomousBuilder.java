@@ -6,8 +6,12 @@ package frc.robot;
 
 import static frc.robot.Constants.*;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.RamseteController;
@@ -18,6 +22,7 @@ import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
@@ -33,8 +38,8 @@ public class AutonomousBuilder {
         The field image has a 20 px margin on all sides, which translates to 0.789'.
         So the field image is effectively 16.579' x 31.579'
         */
-        private static final double kScaleFactorX = 54.0 / 31.579; 
-        private static final double kScaleFactorY = 27.0 / 16.579; 
+        private static final double kScaleFactorX = 1; //54.0 / 31.579; 
+        private static final double kScaleFactorY = 1; //27.0 / 16.579; 
         private static final double kZeroOffset = 0.789 * kFeet2Meters;
 
         /**
@@ -71,6 +76,46 @@ public class AutonomousBuilder {
 
             return yCoord;
         }
+    }
+
+    public static Command getBouncePWCmd(DriveSubsystem driveSubsystem) {
+        // "GameChangers2021\PathWeaver\output\Bounce.wpilib.json"
+        String trajectoryJSON = "PathWeaver\\output\\Bounce.wpilib.json";
+
+        Trajectory pathTrajectory = null;
+        Path trajectoryPath = null;
+        try {
+            if (RobotBase.isSimulation()) {
+                trajectoryPath = Filesystem.getOperatingDirectory().toPath().resolve(trajectoryJSON);
+            } else {
+                trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+            }
+            pathTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+         } catch (IOException ex) {
+            DriverStation.reportError("Unable to open trajectory: " + trajectoryPath, ex.getStackTrace());
+         }
+
+        return getAutoNavCommand(driveSubsystem, pathTrajectory);
+    }
+
+    public static Command getBarrelRacePWCmd(DriveSubsystem driveSubsystem) {
+        // "GameChangers2021\PathWeaver\output\Barrel.wpilib.json"
+        String trajectoryJSON = "PathWeaver\\output\\Barrel.wpilib.json";
+
+        Trajectory pathTrajectory = null;
+        Path trajectoryPath = null;
+        try {
+            if (RobotBase.isSimulation()) {
+                trajectoryPath = Filesystem.getOperatingDirectory().toPath().resolve(trajectoryJSON);
+            } else {
+                trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+            }
+            pathTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+         } catch (IOException ex) {
+            DriverStation.reportError("Unable to open trajectory: " + trajectoryPath, ex.getStackTrace());
+         }
+
+        return getAutoNavCommand(driveSubsystem, pathTrajectory);
     }
 
     public static Command getBarrelRaceCommand(DriveSubsystem driveSubsystem) { 

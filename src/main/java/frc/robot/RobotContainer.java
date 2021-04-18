@@ -93,8 +93,8 @@ public class RobotContainer {
     // Set Arcade Drive via GamePad as the default
     m_driveSubsystem.setDefaultCommand(
       new ArcadeDriveCommand(m_driveSubsystem,
-      () -> -m_gamePad.getRawAxis(GamePad.RightStick.UpDown),
-      () -> m_gamePad.getRawAxis(GamePad.RightStick.LeftRight))
+      () -> -m_gamePad.getRawAxis(GamePad.LeftStick.UpDown),
+      () -> m_gamePad.getRawAxis(GamePad.LeftStick.LeftRight))
     );
     
 
@@ -126,7 +126,9 @@ public class RobotContainer {
    * Set up the Chooser on the SmartDashboard for selecting the autonomous routine
    */
   private void setUpAutonomousChooser() {
-    m_autonomousChooser.setDefaultOption("Barrel Race", AutonomousBuilder.getBarrelRaceCommand(m_driveSubsystem));
+    m_autonomousChooser.setDefaultOption("Bounce (Path Weaver)", AutonomousBuilder.getBouncePWCmd(m_driveSubsystem));
+    m_autonomousChooser.addOption("Barrel Race (Path Weaver)", AutonomousBuilder.getBarrelRacePWCmd(m_driveSubsystem));
+    m_autonomousChooser.addOption("Barrel Race (by Hand)", AutonomousBuilder.getBarrelRaceCommand(m_driveSubsystem));
     m_autonomousChooser.addOption("Do Nothing", null);
     SmartDashboard.putData("Autonomous", m_autonomousChooser);
   }

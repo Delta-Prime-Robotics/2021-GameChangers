@@ -160,9 +160,7 @@ public final class Constants {
 
         public static final double kDeadzone = 0.1;
     }
-    
-    public static final double kFeet2Meters = 0.3048;
-    
+        
     public static final class AutoConstants {
         public static final double kMaxSpeedMetersPerSecond = 3;
         public static final double kMaxAccelerationMetersPerSecondSquared = 3;

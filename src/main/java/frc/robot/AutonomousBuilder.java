@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
+import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import frc.robot.subsystems.DriveSubsystem;
@@ -40,7 +41,7 @@ public class AutonomousBuilder {
         */
         private static final double kScaleFactorX = 1; //54.0 / 31.579; 
         private static final double kScaleFactorY = 1; //27.0 / 16.579; 
-        private static final double kZeroOffset = 0.789 * kFeet2Meters;
+        private static final double kZeroOffset = Units.feetToMeters(0.789);
 
         /**
          * Translates from field diagram coordinates to meters. Adapts result for simulation.
@@ -49,7 +50,7 @@ public class AutonomousBuilder {
          * @return the X coordinate in meters
          */
         public static double getX(double pos) {
-            double xCoord = pos * 2.5 * kFeet2Meters; 
+            double xCoord = pos * Units.feetToMeters(2.5); 
 
             if (RobotBase.isSimulation()) {
                 xCoord += kZeroOffset;
@@ -67,7 +68,7 @@ public class AutonomousBuilder {
          * @return the Y coordinate in meters
          */
         public static double getY(double pos) {
-            double yCoord = pos * 2.5 * kFeet2Meters;
+            double yCoord = pos * Units.feetToMeters(2.5);
 
             if (RobotBase.isSimulation()) {
                 yCoord += kZeroOffset;

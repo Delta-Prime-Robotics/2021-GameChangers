@@ -4,11 +4,8 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
-import edu.wpi.first.wpilibj.system.LinearSystem;
 import edu.wpi.first.wpilibj.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
-import edu.wpi.first.wpiutil.math.numbers.N2;
+import edu.wpi.first.wpilibj.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -102,20 +99,14 @@ public final class Constants {
         public static final boolean kRightEncoderReversed = true;
         
         public static final double kTrackwidthMeters = 0.69;
-        public static final DifferentialDriveKinematics kDriveKinematics =
-        new DifferentialDriveKinematics(kTrackwidthMeters);
 		
         public static final int kEncoderCPR = 360;
         public static final double kWheelDiameterInches = 6;
-        public static final double kWheelDiameterMeters = kWheelDiameterInches * 0.0254;
+        public static final double kWheelDiameterMeters = Units.inchesToMeters(kWheelDiameterInches);
         public static final double kEncoderDistancePerPulse = 
             (kWheelDiameterMeters * Math.PI) / (double) kEncoderCPR;
 
         public static final boolean kGyroReversed = true; //false;
-
-        
-
-
         
         
         // These are example values only - DO NOT USE THESE FOR YOUR OWN ROBOT!
@@ -123,27 +114,21 @@ public final class Constants {
         // for *your* robot's drive.
         // The Robot Characterization Toolsuite provides a convenient tool for obtaining these
         // values for your robot.
-        public static final double ksVolts = 0.22;
-        public static final double kvVoltSecondsPerMeter = 1.98;
-        public static final double kaVoltSecondsSquaredPerMeter = 0.2;
+        public static final double ksVolts = 0.22;                      // kV
+        public static final double kvVoltSecondsPerMeter = 1.98;        // kS
+        public static final double kaVoltSecondsSquaredPerMeter = 0.2;  // kA
         // These two values are "angular" kV and kA
-        public static final double kvVoltSecondsPerRadian = 1.5;
-        public static final double kaVoltSecondsSquaredPerRadian = 0.3;
+        public static final double kvVoltSecondsPerRadian = 1.5;        // 
+        public static final double kaVoltSecondsSquaredPerRadian = 0.3; // 
         
+        // Example value only - as above, this must be tuned for your drive!
+        public static final double kPDriveVel = 8.5;                    // kP
 
-        public static final LinearSystem<N2, N2, N2> kDrivetrainPlant =
-        LinearSystemId.identifyDrivetrainSystem(
-            kvVoltSecondsPerMeter,
-            kaVoltSecondsSquaredPerMeter,
-            kvVoltSecondsPerRadian,
-            kaVoltSecondsSquaredPerRadian);
-        
+
+        // These values are used to support simulation        
         // Example values only -- use what's on your physical robot!
         public static final DCMotor kDriveGearbox = DCMotor.getCIM(2);
-        public static final double kDriveGearing = 8;
-
-        // Example value only - as above, this must be tuned for your drive!
-        public static final double kPDriveVel = 8.5;
+        public static final double kDriveGearing = 10;
     }
 
     // Shooter Subsystem Constants

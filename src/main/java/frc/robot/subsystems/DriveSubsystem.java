@@ -6,11 +6,14 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-//import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -20,15 +23,19 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.system.LinearSystem;
+import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
-//import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpiutil.math.VecBuilder;
+import edu.wpi.first.wpiutil.math.numbers.N2;
 
 import static frc.robot.Constants.*;
 
-//import com.kauailabs.navx.frc.AHRS;
+import com.kauailabs.navx.frc.AHRS;
+
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -54,11 +61,22 @@ public class DriveSubsystem extends SubsystemBase {
                                               EncodingType.k4X);
   
   // The navX gyro sensor
-  //private AHRS m_gyro;
-  private final ADXRS450_Gyro m_gyro = new ADXRS450_Gyro();
+  private AHRS m_gyro;                                          // Gyro on the robot
+  private final ADXRS450_Gyro m_simGyro = new ADXRS450_Gyro();  // Gyro for simulation
   
-  // Odometry class for tracking robot pose
+  // Kinematics & Odometry classes for tracking robot pose
+  private static final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(DriveConstants.kTrackwidthMeters);
+
   private final DifferentialDriveOdometry m_odometry;
+
+  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(
+                    DriveConstants.ksVolts,
+                    DriveConstants.kvVoltSecondsPerMeter,
+                    DriveConstants.kaVoltSecondsSquaredPerMeter);
+
+  private final PIDController m_leftPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+  private final PIDController m_rightPIDController = new PIDController(DriveConstants.kPDriveVel, 0, 0);
+  
 
   /* ************ These classes help us simulate our drivetrain. ************ */
   public DifferentialDrivetrainSim m_drivetrainSimulator;
@@ -67,28 +85,39 @@ public class DriveSubsystem extends SubsystemBase {
   
   private Field2d m_fieldSim; // The Field2d class shows the field in the sim GUI
   private ADXRS450_GyroSim m_gyroSim;
+
+  private LinearSystem<N2, N2, N2> m_DrivetrainPlant;
   /* ************************************************************************* */
 
-  /** Creates a new DriveSubsystem. */
+  /***  Creates a new DriveSubsystem. */
   public DriveSubsystem() {    
     m_leftEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
     m_rightEncoder.setDistancePerPulse(DriveConstants.kEncoderDistancePerPulse);
     resetEncoders();
     
-    // try {
-    //   m_gyro = new AHRS(SPI.Port.kMXP);
-    // }
-    // catch (RuntimeException ex) {
-    //   DriverStation.reportError("Error instantiating navX MSP: " + ex.getMessage(), true);
-    // }
+    if (!RobotBase.isSimulation()) {
+      // Uncomment this block when switching from the simulated Gyro to the NavX
+      try {
+        m_gyro = new AHRS(SPI.Port.kMXP);
+      }
+      catch (RuntimeException ex) {
+        DriverStation.reportError("Error instantiating navX MSP: " + ex.getMessage(), true);
+      }
+    }
     
     m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()));
 
     if (RobotBase.isSimulation()) { // If our robot is simulated
+      m_DrivetrainPlant = LinearSystemId.identifyDrivetrainSystem(
+        DriveConstants.kvVoltSecondsPerMeter,
+        DriveConstants.kaVoltSecondsSquaredPerMeter,
+        DriveConstants.kvVoltSecondsPerRadian,
+        DriveConstants.kaVoltSecondsSquaredPerRadian);
+
       // This class simulates our drivetrain's motion around the field.
       m_drivetrainSimulator =
           new DifferentialDrivetrainSim(
-              DriveConstants.kDrivetrainPlant,
+              m_DrivetrainPlant,
               DriveConstants.kDriveGearbox,
               DriveConstants.kDriveGearing,
               DriveConstants.kTrackwidthMeters,
@@ -98,7 +127,7 @@ public class DriveSubsystem extends SubsystemBase {
       // The encoder and gyro angle sims let us set simulated sensor readings
       m_leftEncoderSim = new EncoderSim(m_leftEncoder);
       m_rightEncoderSim = new EncoderSim(m_rightEncoder);
-      m_gyroSim = new ADXRS450_GyroSim(m_gyro);
+      m_gyroSim = new ADXRS450_GyroSim(m_simGyro);
 
       // the Field2d class lets us visualize our robot in the simulation GUI.
       m_fieldSim = new Field2d();
@@ -175,6 +204,22 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.resetPosition(pose, Rotation2d.fromDegrees(getHeading()));
   }
 
+  public DifferentialDriveKinematics getKinematics() {
+    return m_kinematics;
+  }
+
+  public SimpleMotorFeedforward getFeedforward() {
+    return m_feedforward;
+  }
+
+  public PIDController getLeftPIDController() {
+    return m_leftPIDController;
+  }
+
+  public PIDController getRightPIDController() {
+    return m_rightPIDController;
+  }
+
   /**
    * Stops the drive subystem
    */
@@ -248,7 +293,11 @@ public class DriveSubsystem extends SubsystemBase {
    * Zeroes the heading of the robot. 
    */
   public void zeroHeading() {
-    m_gyro.reset();
+    if (RobotBase.isSimulation()) {
+      m_simGyro.reset();
+    } else {
+      m_gyro.reset();
+    }
   }
   
   /**
@@ -257,7 +306,14 @@ public class DriveSubsystem extends SubsystemBase {
    * @return the robot's heading in degrees, from -180 to 180
    */
   public double getHeading() {
-    return Math.IEEEremainder(m_gyro.getAngle(), 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+    double angle = 0.0;
+    if (RobotBase.isSimulation()) {
+      angle = m_simGyro.getAngle();
+    } else {
+      angle = m_gyro.getAngle();
+    }
+
+    return Math.IEEEremainder(angle, 360) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 
 }

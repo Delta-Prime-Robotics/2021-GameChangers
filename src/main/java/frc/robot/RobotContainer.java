@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.XboxController;
@@ -28,18 +29,22 @@ public class RobotContainer {
   
   // OI controllers are defined here...
   private Joystick m_gamePad = new Joystick(Laptop.UsbPorts.GamePad);
-  //private Joystick m_3dStick = new Joystick(Laptop.UsbPorts.Joystick);
+  private Joystick m_3dStick; // = new Joystick(Laptop.UsbPorts.Joystick);
 
   // The robot's subsystems and commands are defined here...  
   private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
   private final IntakeSubsystem m_intakeSubsystem = new IntakeSubsystem();
-  //private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
+  private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
     
   SendableChooser<Command> m_autonomousChooser = new SendableChooser<>();
 
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    if (!RobotBase.isSimulation()) {
+      m_3dStick = new Joystick(Laptop.UsbPorts.Joystick);
+    }
+
     m_driveSubsystem.setMaxOutput(DriveConstants.kMaxDriveOutput);
 
     configureButtonBindings();
@@ -67,9 +72,9 @@ public class RobotContainer {
       .whenReleased(() -> m_driveSubsystem.setMaxOutput(DriveConstants.kMaxDriveOutput));
 
     // Reset drive system gyro
-    // new JoystickButton(m_gamePad, GamePad.Button.LB)
-    //   .whenPressed(() -> m_driveSubsystem.zeroHeading()
-    // );
+    new JoystickButton(m_gamePad, GamePad.Button.LB)
+      .whenPressed(() -> m_driveSubsystem.zeroHeading()
+    );
 
     // Auto-Aim
     // new JoystickButton(m_gamePad, GamePad.Button.B)
@@ -96,17 +101,18 @@ public class RobotContainer {
       () -> -m_gamePad.getRawAxis(GamePad.LeftStick.UpDown),
       () -> m_gamePad.getRawAxis(GamePad.LeftStick.LeftRight))
     );
-    
 
     m_intakeSubsystem.setDefaultCommand(
       new RunCommand(()->m_intakeSubsystem.setSpeed(m_gamePad.getRawAxis(GamePad.LeftStick.UpDown)), 
       m_intakeSubsystem)
     );
 
-    // m_shooterSubsystem.setDefaultCommand(
-    //   new RunCommand(() -> m_shooterSubsystem.setByJoystick(m_3dStick.getRawAxis(Joystick3D.Axis.Throttle)),
-    //   m_shooterSubsystem)
-    // );
+    if (!RobotBase.isSimulation()) {
+      m_shooterSubsystem.setDefaultCommand(
+        new RunCommand(() -> m_shooterSubsystem.setByJoystick(m_3dStick.getRawAxis(Joystick3D.Axis.Throttle)),
+        m_shooterSubsystem)
+      );
+    }
   }
 
   /**
